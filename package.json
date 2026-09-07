@@ -1,0 +1,6 @@
+{
+  "name": "vehicle-api",
+  "version": "1.0.0",
+  "description": "Vehicle Info API by @SOCIALBANNERR",
+  "main": "api/vehicle.js"
+}
