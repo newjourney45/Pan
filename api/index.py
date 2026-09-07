@@ -1,184 +1,33 @@
-from flask import Flask, request, jsonify
 import requests
-import os
-import logging
-import json
-from datetime import datetime
 
-app = Flask(__name__)
+url = "https://api-ct.vehicleinfo.app/gw/plt/bffctsvc/api/v1/garage/rc-search"
 
-# ==================== LOGGING ====================
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# ==================== CONFIG ====================
-BASE_URL = "https://turtlemintloans.com/api/minterprise/v1/products/personal-loan/leads/existing-lead-by-pan"
-
-# Token ko environment variable se lo, agar nahi hai toh hardcoded use karo
-BEARER_TOKEN = os.getenv("TURTLEMINT_TOKEN", "f13517d5a59b689d16aa30c528ccaf7801f823b0f5548f65d6d3793270cfe8d628cea877289aba166e5425c31cfc7a0b")
-
-# ==================== HEADERS ====================
-HEADERS = {
-    "x-broker": "turtlemint",
-    "x-instana-l": "1,correlationType=web;correlationId=9f7a05debcb2c4c8",
-    "x-instana-s": "9f7a05debcb2c4c8",
-    "authorization": f"Bearer {BEARER_TOKEN}",
-    "x-provider": "signzy",
-    "sec-ch-ua-platform": '"Android"',
-    "sec-ch-ua": '"Not=A?Brand";v="99", "Google Chrome";v="151", "Chromium";v="151"',
-    "sec-ch-ua-mobile": "?1",
-    "x-partner-id": "undefined",
-    "x-tenant": "turtlemint",
-    "user-agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Mobile Safari/537.36",
-    "content-type": "application/json",
-    "accept": "*/*",
-    "sec-fetch-site": "same-origin",
-    "sec-fetch-mode": "cors",
-    "sec-fetch-dest": "empty",
-    "referer": "https://turtlemintloans.com/products/personal-loan/customer/MULTI/apply",
-    "accept-language": "en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7,hi;q=0.6",
+params = {
+  'registration_number': "JH05DE7988"
 }
 
-COOKIES = {
-    "PLAY_SESSION": "b9491e006d593b36da5043bf7febea23a8f2b906-host=http%3A%2F%2Fturtlemintloans.com&X-Forwarded-For=152.59.185.172&broker=turtlemint",
-    "category": "partner",
+headers = {
+  'User-Agent': "okhttp/4.12.0",
+  'Accept': "application/json, text/plain, */*",
+  'Accept-Encoding': "gzip",
+  'authorization': "Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IjI2YjM0NDgwLWQ5ZDEtNDQ4NS1iYzczLTRiN2IxOGJiOWUyNCIsInR5cCI6IkpXVCJ9.eyJhdWQiOltdLCJjbGllbnRfaWQiOiJjbGllbnRfWXVGVmVodWdxV2tOTkJLOTNIZ1Q0dyIsImV4cCI6MTc4OTkyMTIxNiwiZXh0Ijp7Imdyb3VwX2lkIjoiNThhNGQ5MzEtMTZhZi00MGY5LWI0ZmYtOGExNDU4YzA2ZjNkIiwic2Vzc2lvbl9pZCI6ImEyNWVhMWMxLTBiZTMtNDY2NS05MjIyLWMyOWNlZjM5M2Y5NiIsInVzZXJfdHlwZSI6IkVYVEVSTkFMIn0sImlhdCI6MTc4ODcxMTYxNSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmNhcnMyNC5jb20vIiwianRpIjoiMDNlNDNhMzItOGU3Yy00ODRhLTlmYzktYTc1MjBlNmM1YjIyIiwibmJmIjoxNzg4NzExNjE1LCJzY3AiOlsib2ZmbGluZV9hY2Nlc3MiXSwic3ViIjoiNmY0YWQ5ZjktOGRiMy00NGVlLWFhNDUtZjJlM2Q1YTYxNmQxIn0.p96b8srL3ybB0lMC-B9HN-0lpsFr4q5kGgOTLbXpoK26wDwbOp4EY-b0SpcZdyJn8ysIqb5CbTzFQEY2Z4fE5g",
+  'x-user-city-id': "777",
+  'super_app_source': "vehicleinfo_consumerapp",
+  'x-api-key': "c91f6a2e4b78d0c5a31b2f8d7e09c3fa",
+  'x_app_instance_id': "547247478ea8e416185d98fbeb629954",
+  'x-device-id': "547247478ea8e416185d98fbeb629954",
+  'x-tenant-id': "VI_INDIA",
+  'userid': "6f4ad9f9-8db3-44ee-aa45-f2e3d5a616d1",
+  'x_experiment_id': "252935e1-2b91-4b74-9734-9a40037cd09f",
+  'clientid': "vehicleinfo_consumerapp",
+  'appversion': "323",
+  'osname': "android",
+  'useragent': "vehicleinfo_consumerapp/323",
+  'source': "MobileApp",
+  'x_country': "IN",
+  'x-tenant-slug': "vehicleinfo"
 }
 
-# ==================== VALIDATION ====================
-def validate_pan(pan):
-    """Validate PAN card format"""
-    if not pan or len(pan) != 10:
-        return False
-    if not pan[:5].isalpha():
-        return False
-    if not pan[5:9].isdigit():
-        return False
-    if not pan[9].isalpha():
-        return False
-    return True
+response = requests.get(url, params=params, headers=headers)
 
-# ==================== ROUTES ====================
-@app.route("/")
-def home():
-    return jsonify({
-        "api": "PAN to Info API",
-        "version": "1.0.0",
-        "status": "active",
-        "deployed_on": "Vercel",
-        "timestamp": datetime.now().isoformat(),
-        "endpoints": {
-            "/": "API Information",
-            "/health": "Health Check",
-            "/pan-info": {
-                "method": "GET",
-                "params": {"pan": "10-digit PAN number"},
-                "example": "/pan-info?pan=JCZPS4827P"
-            }
-        }
-    })
-
-@app.route("/health")
-def health_check():
-    return jsonify({
-        "status": "healthy",
-        "service": "pan-info-api",
-        "environment": "production",
-        "timestamp": datetime.now().isoformat(),
-        "token_configured": bool(BEARER_TOKEN)
-    })
-
-@app.route("/pan-info", methods=["GET"])
-def pan_info():
-    try:
-        # Get PAN from query params
-        pan = request.args.get("pan", "").strip().upper()
-        
-        # Validate PAN
-        if not validate_pan(pan):
-            return jsonify({
-                "success": False,
-                "error": "Invalid PAN format",
-                "message": "PAN must be 10 characters: first 5 letters, next 4 digits, last 1 letter",
-                "example": "JCZPS4827P",
-                "provided": pan
-            }), 400
-        
-        # Make API request
-        url = f"{BASE_URL}?pan={pan}"
-        logger.info(f"Fetching data for PAN: {pan}")
-        
-        resp = requests.get(
-            url,
-            headers=HEADERS,
-            cookies=COOKIES,
-            timeout=15
-        )
-        
-        # Handle response
-        if resp.status_code == 200:
-            try:
-                data = resp.json()
-                return jsonify({
-                    "success": True,
-                    "pan": pan,
-                    "data": data,
-                    "timestamp": datetime.now().isoformat()
-                })
-            except ValueError:
-                return jsonify({
-                    "success": False,
-                    "error": "Invalid JSON response from upstream",
-                    "raw_response": resp.text[:500]
-                }), 500
-        else:
-            logger.warning(f"Upstream error {resp.status_code} for PAN: {pan}")
-            return jsonify({
-                "success": False,
-                "error": "Upstream service error",
-                "status_code": resp.status_code,
-                "message": resp.text[:500] if resp.text else "No response body",
-                "timestamp": datetime.now().isoformat()
-            }), resp.status_code
-            
-    except requests.exceptions.Timeout:
-        return jsonify({
-            "success": False,
-            "error": "Request timeout",
-            "message": "Upstream service took too long to respond"
-        }), 504
-        
-    except requests.exceptions.ConnectionError:
-        return jsonify({
-            "success": False,
-            "error": "Connection error",
-            "message": "Could not connect to upstream service"
-        }), 503
-        
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        return jsonify({
-            "success": False,
-            "error": "Internal server error",
-            "message": str(e)
-        }), 500
-
-# ==================== ERROR HANDLERS ====================
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({
-        "success": False,
-        "error": "Endpoint not found",
-        "available_endpoints": ["/", "/health", "/pan-info"]
-    }), 404
-
-@app.errorhandler(405)
-def method_not_allowed(error):
-    return jsonify({
-        "success": False,
-        "error": "Method not allowed",
-        "message": "Only GET requests are supported"
-    }), 405
-
-# ==================== MAIN ====================
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+print(response.text)
